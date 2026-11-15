@@ -16,26 +16,30 @@ Install the official Alchemy skill bundle from the repository root:
 npx skills add alchemyplatform/skills --yes
 ```
 
-For shipped application code, select `alchemy-api` when using a standard Alchemy API key. The `agentic-gateway` skill is a separate, optional path for applications that deliberately use wallet-authenticated x402/MPP payments; do not activate it implicitly. Follow its mandatory protocol-selection prompt before any gateway setup.
+The bundle installs `alchemy-api` (API-key app integration) and `agentic-gateway` (wallet-authenticated x402/MPP). For this platform, use `alchemy-api` with a standard API key. Do not activate the gateway path unless you explicitly choose its payment protocol; it can spend USDC per request and requires a separate wallet/payment setup.
+
+Alchemy's CLI can also install the skills and MCP configuration:
+
+```bash
+npm i -g @alchemy/cli@latest
+alchemy auth
+alchemy install skills
+alchemy install mcp
+```
+
+`alchemy auth` is an interactive browser sign-in and app selection step. Never use `--reveal` in shared logs or paste key output into chat.
 
 Skills are documentation/instructions consumed by the coding agent. They do not create a live RPC connection and do not provide runtime tools by themselves.
 
 ### Alchemy MCP — live tools for the coding assistant
 
-The root `.mcp.json` registers Alchemy's hosted MCP endpoint:
+The hosted MCP endpoint is `https://mcp.alchemy.com/mcp`. For Codex, register it locally with:
 
-```json
-{
-  "mcpServers": {
-    "alchemy": {
-      "type": "http",
-      "url": "https://mcp.alchemy.com/mcp"
-    }
-  }
-}
+```bash
+codex mcp add alchemy --url https://mcp.alchemy.com/mcp
 ```
 
-The MCP client must complete Alchemy OAuth sign-in. MCP exposes live tools to a compatible assistant; it is not the production application's RPC adapter and should not be imported by backend services.
+Then restart Codex and complete Alchemy OAuth when prompted. Alternatively, `alchemy install mcp` can configure a supported client. The repository `.mcp.json` is a generic project-level declaration; the actual client must support that file format or be configured with its native command. MCP exposes live tools to a compatible assistant; it is not the production application's RPC adapter and should not be imported by backend services.
 
 **In short:** Skills teach the agent how to use Alchemy APIs; MCP lets a compatible agent call Alchemy tools live. Use both for development.
 
@@ -74,8 +78,10 @@ A probe is PASS only after a real request succeeds and the returned chain identi
 ## Current status
 
 - Repository wiring/configuration: committed in this branch.
-- Alchemy account/API key: NOT CONFIGURED.
+- Alchemy CLI login/app selection: NOT VERIFIED.
+- Alchemy API key: NOT CONFIGURED in this repository or deployment secrets.
 - MCP OAuth connection: NOT VERIFIED.
+- Agent Skills installation on developer machine: NOT VERIFIED.
 - Solana/Ethereum/Arbitrum RPC probes: NOT RUN.
 - Production adapter implementation and tests: NOT IMPLEMENTED in this setup commit.
 - Signing/submission/live trading: DISABLED.
