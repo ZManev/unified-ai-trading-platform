@@ -1,6 +1,8 @@
 import { ReadOnlyRpcClient } from "./rpc-client.mjs";
 
 export const SOLANA_MAINNET_GENESIS_HASH = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+const SOLANA_METHODS = ["getHealth", "getGenesisHash", "getSlot"];
+const EVM_METHODS = ["eth_chainId", "eth_blockNumber"];
 
 function requireKey(env) {
   if (!env.ALCHEMY_API_KEY) throw new Error("ALCHEMY_API_KEY is missing");
@@ -12,7 +14,7 @@ function endpoint(network, env) {
 }
 
 export function createSolanaAdapter({ env = process.env, fetchImpl } = {}) {
-  const client = new ReadOnlyRpcClient({ endpoint: endpoint("solana-mainnet", env), fetchImpl });
+  const client = new ReadOnlyRpcClient({ endpoint: endpoint("solana-mainnet", env), allowedMethods: SOLANA_METHODS, fetchImpl });
   return {
     async readiness() {
       const [health, genesis, slot] = await Promise.all([
@@ -27,7 +29,7 @@ export function createSolanaAdapter({ env = process.env, fetchImpl } = {}) {
 }
 
 function createEvmAdapter(network, expectedChainId, { env = process.env, fetchImpl } = {}) {
-  const client = new ReadOnlyRpcClient({ endpoint: endpoint(network, env), fetchImpl });
+  const client = new ReadOnlyRpcClient({ endpoint: endpoint(network, env), allowedMethods: EVM_METHODS, fetchImpl });
   return {
     async readiness() {
       const [chain, block] = await Promise.all([client.call("eth_chainId"), client.call("eth_blockNumber")]);
