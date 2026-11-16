@@ -14,12 +14,16 @@ function fakeFetch(results) {
   };
 }
 
-test("read-only client rejects transaction and unknown write-like methods before network I/O", async () => {
+test("read-only client rejects writes and unknown methods before network I/O", async () => {
   let calls = 0;
-  const client = new ReadOnlyRpcClient({ endpoint: "https://example.invalid/rpc", fetchImpl: async () => { calls++; } });
-  await assert.rejects(client.call("eth_sendRawTransaction", ["0xdead"]), /read-only policy/);
-  await assert.rejects(client.call("sendTransaction", []), /read-only policy/);
-  await assert.rejects(client.call("swapExactTokensForTokens", []), /read-only policy/);
+  const client = new ReadOnlyRpcClient({
+    endpoint: "https://example.invalid/rpc",
+    allowedMethods: ["eth_chainId"],
+    fetchImpl: async () => { calls++; }
+  });
+  await assert.rejects(client.call("eth_sendRawTransaction", ["0xdead"]), /allowlist/);
+  await assert.rejects(client.call("sendTransaction", []), /allowlist/);
+  await assert.rejects(client.call("unknownMethod", []), /allowlist/);
   assert.equal(calls, 0);
 });
 
