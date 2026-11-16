@@ -11,20 +11,9 @@ permissions:
   contents: read
 
 jobs:
-  unit-tests:
-    name: Read-only adapter tests
+  readiness:
+    name: Alchemy read-only checks
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm test
-
-  rpc-readiness:
-    name: Alchemy RPC readiness (read-only)
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && secrets.ALCHEMY_API_KEY != '' }}
     env:
       ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
     steps:
@@ -32,5 +21,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Unit tests
+        run: npm test
       - name: Run read-only RPC probes
+        if: env.ALCHEMY_API_KEY != ''
         run: npm run alchemy:readiness
+      - name: Report RPC probes blocked
+        if: env.ALCHEMY_API_KEY == ''
+        run: echo "BLOCKED / NOT RUN: repository Actions secret ALCHEMY_API_KEY is unavailable to this workflow run."
