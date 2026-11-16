@@ -11,8 +11,20 @@ permissions:
   contents: read
 
 jobs:
-  readiness:
-    name: Alchemy read-only checks
+  unit-tests:
+    name: Read-only adapter tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: npm test
+
+  rpc-readiness:
+    name: Alchemy RPC readiness (read-only)
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     env:
       ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
@@ -21,8 +33,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Unit tests
-        run: npm test
       - name: Run read-only RPC probes
         if: env.ALCHEMY_API_KEY != ''
         run: npm run alchemy:readiness
