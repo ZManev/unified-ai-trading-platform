@@ -1,0 +1,41 @@
+name: Alchemy read-only readiness
+
+on:
+  push:
+    branches: [main, feature/alchemy-readonly-foundation]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Read-only adapter tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: npm test
+
+  rpc-readiness:
+    name: Alchemy RPC readiness (read-only)
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    env:
+      ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run read-only RPC probes
+        if: env.ALCHEMY_API_KEY != ''
+        run: npm run alchemy:readiness
+      - name: Report RPC probes blocked
+        if: env.ALCHEMY_API_KEY == ''
+        run: echo "BLOCKED / NOT RUN: repository Actions secret ALCHEMY_API_KEY is unavailable to this workflow run."
